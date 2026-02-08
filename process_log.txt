@@ -1,0 +1,438 @@
+(I composed most of my code with the help of AI and most of the time it gave me exactly whatever I want. Here are all the important issues that occurred.)
+
+1 ------------------------------------------------------------------------------------
+Prompt: besides render_template, is there any other way to show a htm?
+
+Issues: AI generated four versions of codes (ommited here): 
+        1. Return raw HTML directly
+        2. Use send_file or send_from_directory to serve a static HTML file
+        3. Put HTML in the static/ folder, and redirect to it
+        but only 3. can be used, because 1. is for very small snippets but not full pages, and 2. is for plain HTML files.
+
+Fix: I picked 3. which is the common way to put an html file if we want to separate front-end and back-end, and it exactly meets the requirements of the assignment.
+
+Explanation: In nowadays practice the front-end and back-end are usually separated, whcih makes render_template not a good way. Method 3. is a good structure to clearly store the files. 
+
+
+2 ------------------------------------------------------------------------------------
+Prompt: please change my previous python and html so that form is transfered to backend using GET
+
+Issues: AI generated this js code:     
+        fetch("http://localhost:5000/?" + params.toString(), {method: "POST"}), 
+        which throws this error when running: 127.0.0.1 - - [26/Sep/2025 14:20:17] "OPTIONS / HTTP/1.1" 200 - 127.0.0.1 - - [26/Sep/2025 14:20:17] "POST / HTTP/1.1" 405 -
+
+Fix: I changed the method in fetch function of JS from "POST" into "GET", then it worked. 
+
+Explanation: Frontend is still sending a POST request (because my JavaScript uses fetch(..., {method: "POST"})). But my Flask backend only allows GET now, so Flask rejects POST with 405 Method Not Allowed.
+
+
+3 ------------------------------------------------------------------------------------ 
+Prompt: I have got my api key, and if I search https://maps.googleapis.com/maps/api/geocode/json?address=University+of+Southern+California+CA&key= YOUR_API_KEY then a json shows up. but how can I use python to do that?
+
+Issues: The code that AI generated lacked of exception handling:
+        location = data["results"][0]["geometry"]["location"]
+        that is, parsing returned json without seeing if a key in a dict 
+
+Fix: I added a "if data["results"]:" before "location = data["results"][0]["geometry"]["location"]"
+
+Explanation: Enhancing the robustness of the code, so that when the api returns a bad json which lacks of some fields that I want, my code won't throw an error and my app would not crash. 
+
+
+4 ------------------------------------------------------------------------------------
+Prompt: In Python, how to use ticketmaster api to find events near university of southern california?
+
+Issues: The AI-generated code used lat and lnt as parameters to search events:
+        params = {
+        "apikey": API_KEY,
+        "latlong": f"{lat},{lng}",
+        "radius": 10,       # 10 miles around USC
+        "unit": "miles",
+        "classificationName": "music"  # optional filter: music, sports, arts, etc.
+        }
+        but the requirements of the assignment is to use keyword and geocode.
+
+Fix: I changed the parameters in the params dict from "latlong": f"{lat},{lng}" to "keyword", and added a new parameter "geoPoint": encode
+
+Explanation: The assignment requires to use keyword and geocode to search events, so I changed the parameters accordingly.
+
+
+5 ------------------------------------------------------------------------------------
+Prompt: review the html and js: <!DOCTYPE html> <html lang="zh-CN"> <head> <meta charset="UTF-8"> <title>Events Search</title> <link rel="stylesheet" href="try.css"> </head> <body> <div class="container"> <form id="searchForm"> <h1>Events Search</h1> <hr> <label for="keyword" class="required">Keyword</label><br> <input type="text" id="keyword" name="keyword"><br> <label for="distance">Distance(miles)</label> <label id="label_category" for="category" class="required">Category</label><br> <input type="number" id="distance" name="distance" placeholder="10"> <select id="category" name="category"> <option value="Default">Default</option> <option value="Music">Music</option> <option value="Sports">Sports</option> <option value="Arts">Arts & Theatre</option> <option value="Theatre">Film & Media</option> <option value="Film">Film</option> <option value="Miscellaneous">Miscellaneous</option> </select><br> <label for="location" class="required">Location</label> <input type="checkbox" id="autoDetect" name="autoDetect" value="on"> <label id="label_autoDetect">Auto-Detect my location</label><br> <input type="text" id="location" name="location"> <button type="submit" id="searchBtn">SEARCH</button> <button type="reset" id="clearBtn">CLEAR</button> </form> </div> <script src="try.js"></script> </body> </html> document.getElementById("searchForm").addEventListener("submit", function(event) { event.preventDefault(); const params = new URLSearchParams({ keyword: document.getElementById("keyword").value, distance: document.getElementById("distance").value || 10, category: document.getElementById("category").value, location: document.getElementById("location").value, autoDetect: document.getElementById("autoDetect").checked }); fetch("/search?" + params.toString(), { method: "GET" }) .then(response => response.json()) .then(data => { console.log("Success:", data); }) .catch((error) => { console.error("Error:", error); }); }); now I wanna add two more functions: 1. When the auto-detect location checkbox is selected, the custom location input box must disappear, and the location value will come from ipinfo (I got the api). When it is unchecked, the custom location input box is a required field, and a location string must be entered. 2. If the user clicks on the SEARCH button without providing a value in the“Keyword” and “Location” (Auto-detect location unchecked) fields, you should show an error "tooltip" that indicates the field is missing.
+
+Issues: The AI-generated code did not fully implement the two requested functions perfectly: 
+        html:
+        <input type="text" id="keyword" name="keyword" required>
+        <input type="text" id="location" name="location">
+        css:
+        /* Tooltip base */
+        .tooltip {
+        position: absolute;
+        background: #f44336;
+        color: white;
+        padding: 5px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 1000;
+        transform: translateY(-100%);
+        }
+        /* Tooltip arrow */
+        .tooltip::after {
+        content: "";
+        position: absolute;
+        bottom: -5px;
+        left: 10px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #f44336 transparent transparent transparent;
+        }
+        js:
+        function showTooltip(inputElement, message) {
+        removeTooltip(inputElement); // avoid duplicates
+
+        const tooltip = document.createElement("div");
+        tooltip.className = "tooltip";
+        tooltip.textContent = message;
+
+        // Position tooltip relative to input
+        const rect = inputElement.getBoundingClientRect();
+        tooltip.style.top = window.scrollY + rect.top - 8 + "px";
+        tooltip.style.left = window.scrollX + rect.left + "px";
+
+        document.body.appendChild(tooltip);
+
+        // Attach to element so we can remove later
+        inputElement._tooltip = tooltip;
+
+        // Remove tooltip when user types
+        inputElement.addEventListener("input", () => removeTooltip(inputElement), { once: true });
+        }
+
+        function removeTooltip(inputElement) {
+        if (inputElement._tooltip) {
+                inputElement._tooltip.remove();
+                inputElement._tooltip = null;
+        }
+        }
+
+        document.getElementById("searchForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
+        let valid = true;
+
+        const keywordInput = document.getElementById("keyword");
+        const locationInput = document.getElementById("location");
+        const autoDetect = document.getElementById("autoDetect");
+
+        // clear old tooltips
+        removeTooltip(keywordInput);
+        removeTooltip(locationInput);
+
+        // check keyword
+        if (!keywordInput.value.trim()) {
+                showTooltip(keywordInput, "Please fill out this field");
+                valid = false;
+        }
+
+        // check location if auto-detect not enabled
+        if (!autoDetect.checked && !locationInput.value.trim()) {
+                showTooltip(locationInput, "Please fill out this field");
+                valid = false;
+        }
+
+        if (!valid) return;
+
+        // ✅ proceed with fetch if valid...
+        });
+        Specifically, the error popping up just push my other things aside.
+
+Fix: I asked a follow-up qustion(see below)
+
+Explanation: I want that error is floating on any other possible elements, pointing to the data missing area and saying that "Please fill out this field".
+
+
+6 ------------------------------------------------------------------------------------
+Prompt: the error popping up just push my other things aside. I want that error is floating on any other possible elements, pointing to the data missing area and saying that "Please fill out this field".
+
+Issues: AI fixed that by using absolute positioning + CSS pseudo-elements so the tooltip “floats” right next to the input field:
+        css:
+        /* Tooltip base */
+        .tooltip {
+        position: absolute;
+        background: #f44336;
+        color: white;
+        padding: 5px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 1000;
+        transform: translateY(-100%);
+        }
+
+        /* Tooltip arrow */
+        .tooltip::after {
+        content: "";
+        position: absolute;
+        bottom: -5px;
+        left: 10px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #f44336 transparent transparent transparent;
+        }
+        js:
+        // ========== Tooltip helpers ==========
+        function showTooltip(inputElement, message) {
+        removeTooltip(inputElement); // avoid duplicates
+
+        const tooltip = document.createElement("div");
+        tooltip.className = "tooltip";
+        tooltip.textContent = message;
+
+        const rect = inputElement.getBoundingClientRect();
+        tooltip.style.position = "absolute";
+        tooltip.style.top = window.scrollY + rect.top - 8 + "px"; // above input
+        tooltip.style.left = window.scrollX + rect.left + "px";
+        tooltip.style.background = "#f44336";
+        tooltip.style.color = "white";
+        tooltip.style.padding = "5px 8px";
+        tooltip.style.borderRadius = "4px";
+        tooltip.style.fontSize = "12px";
+        tooltip.style.whiteSpace = "nowrap";
+        tooltip.style.zIndex = 1000;
+        tooltip.style.transform = "translateY(-100%)";
+
+        // arrow
+        tooltip.style.setProperty("--arrow-size", "5px");
+        tooltip.style.setProperty("--arrow-color", "#f44336");
+        tooltip.style.position = "absolute";
+
+        document.body.appendChild(tooltip);
+
+        // attach reference
+        inputElement._tooltip = tooltip;
+
+        // remove tooltip when user types
+        inputElement.addEventListener("input", () => removeTooltip(inputElement), { once: true });
+        }
+
+        function removeTooltip(inputElement) {
+        if (inputElement._tooltip) {
+                inputElement._tooltip.remove();
+                inputElement._tooltip = null;
+        }
+        }
+
+        // ========== Auto-detect toggle ==========
+        document.getElementById("autoDetect").addEventListener("change", async function () {
+        const locationInput = document.getElementById("location");
+
+        if (this.checked) {
+                locationInput.style.display = "none"; // hide manual input
+
+                try {
+                const response = await fetch("https://ipinfo.io/json?token=YOUR_TOKEN"); // put your ipinfo token
+                const data = await response.json();
+                console.log("Auto-detected location:", data);
+                // store auto-detected location in input (hidden)
+                locationInput.value = data.city + ", " + data.region;
+                } catch (error) {
+                console.error("IPInfo error:", error);
+                locationInput.value = "";
+                }
+        } else {
+                locationInput.style.display = "inline-block"; // show manual input again
+                locationInput.value = "";
+        }
+        });
+
+        // ========== Form submission ==========
+        document.getElementById("searchForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
+        let valid = true;
+
+        const keywordInput = document.getElementById("keyword");
+        const locationInput = document.getElementById("location");
+        const autoDetect = document.getElementById("autoDetect");
+
+        // clear old tooltips
+        removeTooltip(keywordInput);
+        removeTooltip(locationInput);
+
+        // validate keyword
+        if (!keywordInput.value.trim()) {
+                showTooltip(keywordInput, "Please fill out this field");
+                valid = false;
+        }
+
+        // validate location if auto-detect is not checked
+        if (!autoDetect.checked && !locationInput.value.trim()) {
+                showTooltip(locationInput, "Please fill out this field");
+                valid = false;
+        }
+
+        if (!valid) return;
+
+        // prepare parameters
+        const params = new URLSearchParams({
+                keyword: keywordInput.value,
+                distance: document.getElementById("distance").value || 10,
+                category: document.getElementById("category").value,
+                location: locationInput.value,
+                autoDetect: autoDetect.checked
+        });
+
+        try {
+                const response = await fetch("/search?" + params.toString(), { method: "GET" });
+                const data = await response.json();
+                console.log("Success:", data);
+                // TODO: render results on page
+        } catch (error) {
+                console.error("Error:", error);
+        }
+        });
+        but put the css into js, which is not a good practice.
+
+Fix: I moved the css part into the try.css file, and just add/remove a class in js.
+
+Explanation: Absolute positioning is used to place the tooltip exactly where it is needed, CSS pseudo-elements are used to create the tooltip effect, and separating CSS from JS is a better practice, which makes the code cleaner and easier to maintain.
+
+
+7 ------------------------------------------------------------------------------------
+Prompt: now I put the tooltip below the input, so how can i let the arrow point up? and I want this arrow to stick out of the tooltip box!
+
+Issues: The AI-generated code did not fully implement the arrow pointing up and sticking out of the tooltip box: 
+        .tooltip {
+        position: absolute;
+        background: #f44336;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 9999;
+        white-space: nowrap;
+        }
+
+        .tooltip::after {
+        content: "";
+        position: absolute;
+        top: -5px;  /* place arrow above the tooltip box */
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 5px;
+        border-style: solid;
+        border-color: transparent transparent #f44336 transparent;
+        }
+        Specifically, it did not adjust the CSS for the tooltip arrow to achieve the desired effect.
+
+Fix: I modified the CSS for the tooltip arrow to point upwards and stick out of the tooltip box by adjusting the border properties.:
+        .tooltip {
+        position: absolute;
+        background: #f44336;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 9999;
+        white-space: nowrap;
+        }
+
+        .tooltip::after {
+        content: "";
+        position: absolute;
+        top: 100%; /* place it below the tooltip box */
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 6px;
+        border-style: solid;
+        border-color: #f44336 transparent transparent transparent;
+        }
+
+Explanation: By changing the border properties of the CSS pseudo-element, I was able to create an arrow that points upwards and sticks out of the tooltip box, achieving the desired visual effect. The main trick is to use border-bottom instead of border-top, and adjust the position accordingly.
+
+
+8 ------------------------------------------------------------------------------------
+Prompt: I want to add a function that when user clicks the CLEAR button, all the error tooltips disappear.
+
+Issues: The AI-generated code did not fully implement the function to clear all error tooltips when the CLEAR button is clicked. Specifically, it did not add an event listener for the CLEAR button to remove the tooltip classes.
+
+Fix: I added an event listener for the CLEAR button that removes the tooltip classes from all input fields when clicked.
+
+Explanation: By adding an event listener to the CLEAR button, I ensured that when the button is clicked, all error tooltips are removed from the input fields, providing a clean state for the user to start over.
+
+
+9 ------------------------------------------------------------------------------------
+Prompt: I want to add a function that when user clicks the CLEAR button, all the error tooltips disappear, and the location input box reappears if it was hidden.
+
+Issues: The AI-generated code did not fully implement the function to clear all error tooltips and show the location input box when the CLEAR button is clicked. Specifically, it did not add logic to check the state of the auto-detect checkbox and show the location input box accordingly.
+
+Fix: I modified the event listener for the CLEAR button to also check the state of the auto-detect checkbox and show the location input box if it was hidden.
+
+Explanation: By adding logic to the CLEAR button event listener, I ensured that when the button is clicked, all error tooltips are removed and the location input box is shown if the auto-detect checkbox is unchecked, providing a clean state for the user to start over.
+
+
+10 ------------------------------------------------------------------------------------
+Prompt: from flask import Flask, request, jsonify from flask import redirect, url_for from flask_cors import CORS from geo import find_events app = Flask(__name__) CORS(app) @app.route('/', methods=['GET']) def index(): return redirect(url_for('static', filename='try.html')) @app.route('/search', methods=['GET']) def search(): keyword = request.args.get("keyword", "") distance = request.args.get("distance", "10") category = request.args.get("category", "Default") location = request.args.get("location", "") auto_detect = request.args.get("autoDetect", "off") print("Received:", keyword, distance, category, location, auto_detect) return_data = jsonify(find_events(keyword, distance, category, location)) print(return_data.get_data(as_text=True)) return return_data if __name__ == '__main__': app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False) find_events is a function I wrote to get events' date, name, genre, image link and venue using google and ticketmaster api. if you print(return_data.get_data(as_text=True)) you will see this: [ { "Date": "2025-11-09", "Event": "BERD Dance Ensemble ", "Genre": "Arts & Theatre", "Image": "https://s1.ticketm.net/dam/c/cf0/e3e32db3-adac-486f-b78d-7c8857f8bcf0_106191_RETINA_PORTRAIT_16_9.jpg", "Venue": "Orpheum Theatre" }, { "Date": "2025-12-18", "Event": "Disney On Ice: Let's Dance!", "Genre": "Miscellaneous", "Image": "https://s1.ticketm.net/dam/a/453/a48c91f1-e2c7-4e64-b396-7807ce9d9453_RETINA_PORTRAIT_3_2.jpg", "Venue": "Crypto.com Arena" }, ... ] now I want to send this data to html. User will see a table below the form container after clicking search botton. The table has 5 colomns "Date", "Icon", "Event", "Genre", and "Venue", and each rows' icon is a true image but not the link itself.
+
+Issues: the css of the table is:
+        #resultsTable {
+        display: inline-block;
+        }
+        I want that result table's position under the form but it was on the right of the form.
+
+Fix: I changed the table's style of display from "inline-block" to "block", and set its margin to "0 auto", like this:
+        #resultsTable {
+        display: block;
+        margin: 0 auto;
+        }
+        then it worked.
+
+Explanation: Block is line feed. By setting the table's display to "block" and centering it with "margin: 0 auto", the table is positioned directly below the form and centered on the page, achieving the desired layout.
+
+
+11 ------------------------------------------------------------------------------------
+Prompt: now the table is under the form, but I want to make it more beautiful. please add a border to each cell, and make the header row have a different background color.
+
+Issues: The AI-generated code did not fully implement the desired table styling. Specifically, it did not add borders to each cell and did not change the background color of the header row.
+
+Fix: I added CSS styles to the table, th, and td elements to add borders to each cell and changed the background color of the header row.
+
+Explanation: By adding CSS styles to the table elements, I was able to enhance the visual appearance of the table, making it more appealing and easier to read. The borders help to delineate each cell, and the different background color for the header row helps to distinguish it from the rest of the table.
+
+
+12 ------------------------------------------------------------------------------------
+Prompt: how can I click the table header to sort the table by that column? The columns are "Event", "Genre", and "Venue".
+
+Issues: Using AI-generated code, the rows seemed to be sorted randomly but not alphabetically or chronologically.
+        More specifically, this is its code: 
+        // Sorting logic
+        document.querySelectorAll("#resultsHeader th.sortable").forEach((header, index) => {
+        header.style.cursor = "pointer"; // show it's clickable
+        let asc = true;
+
+        header.addEventListener("click", () => {
+                const tbody = document.getElementById("resultsBody");
+                const rows = Array.from(tbody.querySelectorAll("tr"));
+
+                rows.sort((a, b) => {
+                const textA = a.cells[index].textContent.trim().toLowerCase();
+                const textB = b.cells[index].textContent.trim().toLowerCase();
+
+                if (textA < textB) return asc ? -1 : 1;
+                if (textA > textB) return asc ? 1 : -1;
+                return 0;
+                });
+
+                // toggle asc/desc
+                asc = !asc;
+
+                // re-append rows in sorted order
+                rows.forEach(row => tbody.appendChild(row));
+        });
+        });
+
+Fix: In "querySelectorAll("#resultsHeader th.sortable")", 3 columns ("Event", "Genre", and "Venue") are selected, but the first two columns ("Date" and "Icon") are not. So the index of the selected columns are 2, 3, and 4 in the whole table. I changed "a.cells[index]" and "b.cells[index]" to "a.cells[index + 2]" and "b.cells[index + 2]", then it worked.
+
+Explanation: The index variable in the event listener corresponds to the position of the header in the selected set of sortable headers, not the overall table. By adjusting the index to account for the non-sortable columns, the sorting function now correctly references the intended columns in the table rows.
+
+
+(Apart from matters above, the AI is generally able to correctly answer my questions and meet my needs.)
+

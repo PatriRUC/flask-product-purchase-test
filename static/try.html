@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Events Search</title>
+    <link rel="stylesheet" href="try.css">
+</head>
+<body>
+    <div class="container">
+        <form id="searchForm">
+            <h1>Events Search</h1>
+            <hr>
+            <label for="keyword" class="required">Keyword</label><br>
+            <input type="text" id="keyword" name="keyword"><br>
+
+            <label for="distance">Distance(miles)</label>
+            <label id="label_category" for="category" class="required">Category</label><br>
+
+            <input type="number" id="distance" name="distance" placeholder="10">
+            <select id="category" name="category">
+                <option value="Default">Default</option>
+                <option value="Music">Music</option>
+                <option value="Sports">Sports</option>
+                <option value="Arts & Theatre">Arts & Theatre</option>
+                <option value="Film">Film</option>
+                <option value="Miscellaneous">Miscellaneous</option>
+            </select><br>
+
+            <label for="location" class="required">Location</label>
+            <input type="checkbox" id="autoDetect" name="autoDetect" value="on">
+            <label id="label_autoDetect">Auto-Detect my location</label><br>
+
+            <input type="text" id="location" name="location">
+            <button type="submit" id="searchBtn">SEARCH</button>
+            <button type="reset" id="clearBtn">CLEAR</button>
+        </form>
+
+    </div>
+
+    <div class="resultsContainer" id="resultsContainer">
+        <table id="resultsTable" border="1" cellspacing="0" cellpadding="8">
+            <thead id="resultsHeader">
+                <tr>
+                    <th>Date</th>
+                    <th>Icon</th>
+                    <th class="sortable">Event</th>
+                    <th class="sortable">Genre</th>
+                    <th class="sortable">Venue</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody">
+                <!-- rows will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="detailsContainer" id="detailsContainer" style="display: none;">
+
+    </div>
+
+    <div class="showVenueArrow" id="showVenueArrow" style="display: none;">
+        <h2>Show Venue Details</h2>
+        <span class="arrow">▼</span>
+
+    </div>
+
+    <div class="venuesContainer" id="venuesContainer" style="display: none;">
+
+    </div>
+
+    <script src="try.js"></script>
+</body>
+</html>

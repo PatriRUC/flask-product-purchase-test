@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Product Purchase</title>
+</head>
+<body>
+
+<h2>Search Product</h2>
+
+<input type="text" id="productName" placeholder="Enter product name">
+<button onclick="searchProduct()">Search</button>
+
+<pre id="productInfo"></pre>
+
+<div id="purchaseSection" style="display:none;">
+    <h3>Purchase</h3>
+    <input type="number" id="buyQuantity" min="1" max="5" placeholder="Quantity (1-5)">
+    <button onclick="purchase()">Buy</button>
+</div>
+
+<pre id="result"></pre>
+
+<script>
+let currentProduct = null;
+
+function searchProduct() {
+    const name = document.getElementById("productName").value;
+
+    fetch(`http://18.144.29.106:8080/product?name=${name}`)
+        .then(resp => resp.json())
+        .then(data => {
+            currentProduct = data;
+            document.getElementById("productInfo").textContent =
+                JSON.stringify(data, null, 2);
+            document.getElementById("purchaseSection").style.display = "block";
+        })
+        .catch(err => {
+            document.getElementById("result").textContent = err;
+        });
+}
+
+function purchase() {
+    const quantity = parseInt(document.getElementById("buyQuantity").value);
+
+    fetch("http://18.144.29.106:8080/purchase", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            product_id: currentProduct.id,
+            quantity: quantity
+        })
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        document.getElementById("result").textContent =
+            JSON.stringify(data, null, 2);
+    })
+    .catch(err => {
+        document.getElementById("result").textContent = err;
+    });
+}
+</script>
+
+</body>
+</html>

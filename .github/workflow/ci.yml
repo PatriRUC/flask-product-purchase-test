@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [ "Myflask" ]
+  pull_request:
+    branches: [ "Myflask" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Wait for MySQL
+        run: |
+          until mysql -h 127.0.0.1 -uroot -proot -e "SELECT 1"; do
+            sleep 2
+          done
+
+      - name: Init database
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot test_db << EOF
+          CREATE TABLE product (
+            id INT PRIMARY KEY,
+            name VARCHAR(255),
+            price DECIMAL(10,2),
+            quantity INT
+          );
+          INSERT INTO product VALUES (100, 'TestProduct', 10.00, 5);
+          EOF
+
+      - name: Run tests
+        env:
+          DB_HOST: 127.0.0.1
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_NAME: test_db
+        run: |
+          pytest -v
