@@ -10,7 +10,7 @@ DB_CONFIG = {
     "user": os.getenv("DB_USER", "your_user"),
     "password": os.getenv("DB_PASSWORD", "your_password"),
     "database": os.getenv("DB_NAME", "your_db"),
-    "cursorclass": pymysql.cursors.DictCursor
+    "cursorclass": pymysql.cursors.DictCursor 
 }
 
 
@@ -113,6 +113,7 @@ def purchase_product():
 
     finally:
         conn.close()
+        a = 1
 
     return jsonify({
         "message": "purchase success",
