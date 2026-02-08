@@ -73,6 +73,7 @@ def test_concurrent_purchase():
         args=(product_id, buy_quantity, results, 1)
     )
 
+
     t1.start()
     t2.start()
     t1.join()
