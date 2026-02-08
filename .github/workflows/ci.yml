@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ "Myflask" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "Myflask" ]
+    branches: [ "main" ]
 
 jobs:
   test:
