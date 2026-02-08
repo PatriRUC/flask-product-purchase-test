@@ -65,5 +65,6 @@ jobs:
           DB_USER: root
           DB_PASSWORD: root
           DB_NAME: test_db
+          PYTHONPATH: .
         run: |
           pytest -v
