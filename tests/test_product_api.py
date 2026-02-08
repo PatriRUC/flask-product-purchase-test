@@ -5,10 +5,10 @@ import os
 
 def get_stock(product_id):
     conn = pymysql.connect(
-        host="database-1.cpqi0aygkde7.us-west-1.rds.amazonaws.com",
-        user="admin",
-        password="pjg020424",
-        database="testdb",
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME"),
         cursorclass=pymysql.cursors.DictCursor
     )
     try:
