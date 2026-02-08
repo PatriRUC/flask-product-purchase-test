@@ -1,6 +1,7 @@
 import threading
 import pymysql
 from Myflask import app   # 你的 Flask app
+import os
 
 def get_stock(product_id):
     conn = pymysql.connect(
@@ -36,9 +37,28 @@ def purchase(product_id, quantity, results, index):
         results[index] = resp.status_code
 
 
+def set_stock(product_id, quantity):
+    conn = pymysql.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME"),
+        cursorclass=pymysql.cursors.DictCursor
+    )
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "UPDATE product SET quantity = %s WHERE id = %s",
+                (quantity, product_id)
+            )
+            conn.commit()
+    finally:
+        conn.close()
+
 def test_concurrent_purchase():
     product_id = 100
     buy_quantity = 3
+    set_stock(product_id, 5)
 
     before_stock = get_stock(product_id)
 
